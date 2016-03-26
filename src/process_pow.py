@@ -1,17 +1,12 @@
 '''
 
-    TODO
-    - record more, longer sessions
-    - try classifiers
-
-
     Motor imagery decoding from EEG data using the Common Spatial Pattern (CSP)
         http://martinos.org/mne/dev/auto_examples/decoding/plot_decoding_csp_eeg.html
 
 
 '''
 
-import mi_params
+import params
 import mne
 import math
 import threading
@@ -45,7 +40,7 @@ if __name__ == '__main__':
     #data_filename = 'BME_BCI_MI_REC_20160310_09h04m05s.csv'
     data_loaded = np.loadtxt(fname=data_filename, delimiter=',', skiprows=1);
     print 'data_loaded.shape:', data_loaded.shape
-    X_raw = data_loaded[:, 1:(1+mi_params.NUM_CHANNELS)]
+    X_raw = data_loaded[:, 1:(1+params.NUM_CHANNELS)]
     time_axis = data_loaded[:, 0]
     label_feed = data_loaded[:, 17:21]
     X_feat = data_loaded[:, 23]
@@ -54,15 +49,15 @@ if __name__ == '__main__':
 
     # Preprocess the raw data
     print "X_raw[:, 1].shape:", X_raw[:, 1].shape
-    X_preproc = X_raw - np.tile(np.reshape(X_raw[:, 1], (X_raw.shape[0], 1)), [1, mi_params.NUM_CHANNELS]);
+    X_preproc = X_raw - np.tile(np.reshape(X_raw[:, 1], (X_raw.shape[0], 1)), [1, params.NUM_CHANNELS]);
 
 
     # Initialize the time-domain filter
-    freq_Nyq = mi_params.FREQ_S/2.
+    freq_Nyq = params.FREQ_S/2.
     freq_trans = 0.5
     freqs_FIR_Hz = np.array([8.-freq_trans, 12.+freq_trans])
     #numer = signal.firwin(M_FIR, freqs_FIR, nyq=FREQ_S/2., pass_zero=False, window="hamming", scale=False)
-    numer = signal.firwin(mi_params.M_FIR, freqs_FIR_Hz, nyq=freq_Nyq, pass_zero=False, window="hamming", scale=False)
+    numer = signal.firwin(params.M_FIR, freqs_FIR_Hz, nyq=freq_Nyq, pass_zero=False, window="hamming", scale=False)
     denom = 1.
     '''w, h = signal.freqz(numer)
     plt.plot(freq_Nyq*w/math.pi, 20 * np.log10(abs(h)), 'b')
@@ -80,7 +75,7 @@ if __name__ == '__main__':
 
 
     # Get moving average on signal power
-    X_ma = signal.convolve(X_pow.T, np.ones((1, int(1*mi_params.FREQ_S)))).T
+    X_ma = signal.convolve(X_pow.T, np.ones((1, int(1*params.FREQ_S)))).T
 
 
     # Get channel differences
@@ -118,8 +113,8 @@ if __name__ == '__main__':
 
     # Epoch the data
     X_to_epoch = X_tdfilt
-    montage = mne.channels.read_montage('standard_1005', mi_params.CHANNEL_NAMES)
-    X_info = mne.create_info(mi_params.CHANNEL_NAMES, mi_params.FREQ_S, ch_types='eeg', montage=montage)
+    montage = mne.channels.read_montage('standard_1005', params.CHANNEL_NAMES)
+    X_info = mne.create_info(params.CHANNEL_NAMES, params.FREQ_S, ch_types='eeg', montage=montage)
     X_mne = mne.io.RawArray(X_to_epoch.T, info=X_info, verbose=None)
     t_min = 0
     t_max = 1
@@ -127,7 +122,7 @@ if __name__ == '__main__':
     event_id_rh = 0
     event_series_rh = np.reshape(label_feed[:, event_id_rh], (label_feed.shape[0], 1))
     #print 'event_series.shape:', event_series.shape
-    events_info = mne.create_info([event_name_rh], mi_params.FREQ_S, ch_types='eeg', montage=None)
+    events_info = mne.create_info([event_name_rh], params.FREQ_S, ch_types='eeg', montage=None)
     events_raw_mne = mne.io.RawArray(event_series_rh.T, info=events_info, verbose=None)
     events_rh_mne = mne.find_events(events_raw_mne, stim_channel=event_name_rh, verbose=None)
     #print 'events_rh_mne', events_rh_mne
@@ -135,7 +130,7 @@ if __name__ == '__main__':
     event_id_lh = 0
     event_series_lh = np.reshape(label_feed[:, event_id_lh], (label_feed.shape[0], 1))
     #print 'event_series.shape:', event_series.shape
-    events_info = mne.create_info([event_name_lh], mi_params.FREQ_S, ch_types='eeg', montage=None)
+    events_info = mne.create_info([event_name_lh], params.FREQ_S, ch_types='eeg', montage=None)
     events_raw_mne = mne.io.RawArray(event_series_lh.T, info=events_info, verbose=None)
     events_lh_mne = mne.find_events(events_raw_mne, stim_channel=event_name_lh, verbose=None)
 
@@ -171,7 +166,7 @@ if __name__ == '__main__':
 
 
     # Get moving average on signal power
-    X_ma_spf = signal.convolve(X_pow_spf.T, np.ones((1, int(1*mi_params.FREQ_S)))).T
+    X_ma_spf = signal.convolve(X_pow_spf.T, np.ones((1, int(1*params.FREQ_S)))).T
 
 
     # Plot the signal
