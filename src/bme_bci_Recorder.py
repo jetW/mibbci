@@ -1,4 +1,6 @@
 
+
+import mi_params
 import multiprocessing
 import libmushu
 import numpy as np
@@ -6,7 +8,6 @@ import time
 from datetime import datetime
 
 
-#NUM_TIME_ELEMENTS = 7
 
 
 class Recorder:
@@ -52,6 +53,12 @@ class Recorder:
         self.i_time_fast = 0
         self.new_data_counter = 0
 
+
+        # Get some initial data
+        len_initial_data_temp = 0
+        while len_initial_data_temp < mi_params.LEN_INITIAL_DATA:
+            data, _ = self.amp.get_data()
+            len_initial_data_temp += data.shape[0]
 
     # End of init
 

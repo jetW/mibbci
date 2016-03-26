@@ -77,40 +77,40 @@ def cursor_func():
     cursor_pos = cursor_pos_prev
     #my_canvas.delete('all')
     #event_arr = np.zeros(((LEN_IDLE_SEC+LEN_RIGHT_SEC+LEN_IDLE_SEC+LEN_LEFT_SEC), 3))
-    event_arr_right = np.zeros((mi_params.LEN_DATA_CHUNK, mi_params.NUM_EVENT_TYPES));
-    event_arr_right[:, 0] = np.ones(mi_params.LEN_DATA_CHUNK);        # TODO event ids
-    event_arr_left = np.zeros((mi_params.LEN_DATA_CHUNK, mi_params.NUM_EVENT_TYPES));
-    event_arr_left[:, 1] = np.ones(mi_params.LEN_DATA_CHUNK);        # TODO event ids
-    event_arr_idle = np.zeros((mi_params.LEN_DATA_CHUNK, mi_params.NUM_EVENT_TYPES));
-    event_arr_idle[:, 2] = np.ones(mi_params.LEN_DATA_CHUNK);        # TODO event ids
-    event_arr_calib = np.zeros((mi_params.LEN_DATA_CHUNK, mi_params.NUM_EVENT_TYPES));
-    event_arr_calib[:, 3] = np.ones(mi_params.LEN_DATA_CHUNK);        # TODO event ids
+    event_arr_right = np.zeros((mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_EVENT_TYPES));
+    event_arr_right[:, 0] = np.ones(mi_params.LEN_DATA_CHUNK_READ);        # TODO event ids
+    event_arr_left = np.zeros((mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_EVENT_TYPES));
+    event_arr_left[:, 1] = np.ones(mi_params.LEN_DATA_CHUNK_READ);        # TODO event ids
+    event_arr_idle = np.zeros((mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_EVENT_TYPES));
+    event_arr_idle[:, 2] = np.ones(mi_params.LEN_DATA_CHUNK_READ);        # TODO event ids
+    event_arr_calib = np.zeros((mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_EVENT_TYPES));
+    event_arr_calib[:, 3] = np.ones(mi_params.LEN_DATA_CHUNK_READ);        # TODO event ids
     #cursor_color_list = []
     cursor_event_list = []
-    cursor_color_arr_raw = np.zeros((int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK), 3))
+    cursor_color_arr_raw = np.zeros((int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ), 3))
     color_counter = 0
-    for i in range(int(mi_params.LEN_IDLE_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)):
+    for i in range(int(mi_params.LEN_IDLE_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)):
         #cursor_color_list.append(CURSOR_COLOR_IDLE)
         cursor_color_arr_raw[color_counter, :] = mi_params.CURSOR_COLOR_IDLE
         cursor_event_list.append(event_arr_idle)      # r, l, idle, calib
         color_counter += 1
-    for i in range(int(mi_params.LEN_RIGHT_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)):
+    for i in range(int(mi_params.LEN_RIGHT_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)):
         #cursor_color_list.append(CURSOR_COLOR_RIGHT)
         cursor_color_arr_raw[color_counter, :] = mi_params.CURSOR_COLOR_RIGHT
         cursor_event_list.append(event_arr_right)
         color_counter += 1
-    for i in range(int(mi_params.LEN_IDLE_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)):
+    for i in range(int(mi_params.LEN_IDLE_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)):
         #cursor_color_list.append(CURSOR_COLOR_IDLE)
         cursor_color_arr_raw[color_counter, :] = mi_params.CURSOR_COLOR_IDLE
         cursor_event_list.append(event_arr_idle)
         color_counter += 1
-    for i in range(int(mi_params.LEN_LEFT_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)):
+    for i in range(int(mi_params.LEN_LEFT_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)):
         #cursor_color_list.append(CURSOR_COLOR_LEFT)
         cursor_color_arr_raw[color_counter, :] = mi_params.CURSOR_COLOR_LEFT
         cursor_event_list.append(event_arr_left)
         color_counter += 1
-    conv_window = np.ones((mi_params.LEN_COLOR_CONV_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK, 1))\
-                  / (int(mi_params.LEN_COLOR_CONV_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK))
+    conv_window = np.ones((mi_params.LEN_COLOR_CONV_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ, 1))\
+                  / (int(mi_params.LEN_COLOR_CONV_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ))
     cursor_color_arr_ud = np.flipud(cursor_color_arr_raw)
     cursor_color_arr_ud_convd = signal.convolve(cursor_color_arr_ud.T, conv_window.T).T
     cursor_color_arr_final = np.flipud(cursor_color_arr_ud_convd[0:cursor_color_arr_raw.shape[0], :])
@@ -133,11 +133,11 @@ def cursor_func():
 
 
     # Wait a little until the recorder gets some data
-    #time.sleep(2.0)
-    if not is_simulation_mode:
-        while recorder.new_data_counter < 20:
-            print 'Waiting for some initial data...'
-            time.sleep(0.1)
+    #time.sleep(2.0)    The obj does this at init
+    #if not is_simulation_mode:
+    #    while recorder.new_data_counter < mi_params.LEN_DATA_CHUNK_READ:
+    #        print 'Waiting for some initial data...'
+    #        time.sleep(0.1)
 
 
     # Rest-state offset estimation loop
@@ -146,9 +146,9 @@ def cursor_func():
     X_events_live = np.zeros((mi_params.FREQ_S*mi_params.LEN_REC_BUF_SEC, mi_params.NUM_EVENT_TYPES))
     X_buf_live = np.zeros((mi_params.FREQ_S*mi_params.LEN_REC_BUF_SEC, 2))
     X_buf_feat_live = np.zeros((mi_params.FREQ_S*mi_params.LEN_REC_BUF_SEC, 1))
-    X_feat_log = np.zeros((mi_params.FREQ_S*mi_params.LEN_REC_BUF_SEC/mi_params.LEN_DATA_CHUNK, 1))
+    X_feat_log = np.zeros((mi_params.FREQ_S*mi_params.LEN_REC_BUF_SEC/mi_params.LEN_DATA_CHUNK_READ, 1))
     counter = 0
-    while counter < (mi_params.LEN_REST_ESTIM_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK):
+    while counter < (mi_params.LEN_REST_ESTIM_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ):
         print 'counter: ', counter
 
         # Clear the canvas
@@ -158,20 +158,20 @@ def cursor_func():
 
         if not is_simulation_mode:
             # Wait for new data and get it
-            data_last_chunk = recorder.get_new_data(mi_params.LEN_DATA_CHUNK, 0.01)
+            data_last_chunk = recorder.get_new_data(mi_params.LEN_DATA_CHUNK_READ, mi_params.AMP_WAIT_SEC)
             recorder.acknowledge_new_data()
             print 'recorder.new_data_counter:', recorder.new_data_counter
         else:
-            time.sleep(1.0 / (mi_params.FREQ_S/mi_params.LEN_DATA_CHUNK))
-            data_last_chunk = 1000.0 * np.random.rand(mi_params.LEN_DATA_CHUNK, mi_params.NUM_CHANNELS)
+            time.sleep(1.0 / (mi_params.FREQ_S/mi_params.LEN_DATA_CHUNK_READ))
+            data_last_chunk = 1000.0 * np.random.rand(mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_CHANNELS)
             #print 'Random data_last_chunk size:', data_last_chunk
 
         if True:
             # Insert the new sample to our time series
-            X_buf_raw_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :]\
+            X_buf_raw_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :]\
                             = data_last_chunk
             #print 'data_last_chunk:', data_last_chunk
-            #data_last_chunk = np.random.rand(LEN_DATA_CHUNK, NUM_CHANNELS)
+            #data_last_chunk = np.random.rand(LEN_DATA_CHUNK_READ, NUM_CHANNELS)
             #print 'data_last_chunk.shape:', data_last_chunk.shape
             #print '(data_last_chunk[:, 7]-data_last_chunk[:, 3]).shape:', (data_last_chunk[:, 7]-data_last_chunk[:, 3]).shape
             #data_last_reref = data_last_chunk[:, (7, 10)]
@@ -179,12 +179,12 @@ def cursor_func():
             data_last_reref = np.array([ (data_last_chunk[:, 7]-data_last_chunk[:, 4]), (data_last_chunk[:, 10]-data_last_chunk[:, 4])]).T  # Re-reference
             #print 'data_last_reref.shape:', data_last_reref.shape
             #print 'data_last_reref:', data_last_reref
-            X_buf_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :] = data_last_reref   # TODO which channel ids
-            #print 'X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK), :]:', X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK), :]
-            X_events_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :] = event_arr_calib
+            X_buf_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :] = data_last_reref   # TODO which channel ids
+            #print 'X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK_READ):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK_READ), :]:', X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK_READ):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK_READ), :]
+            X_events_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :] = event_arr_calib
 
             # Process the data
-            i_2 = (counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK
+            i_2 = (counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ
             #print 'numer, denom:', numer, denom
             #print 'X_buf_live[(i_2-M_FIR):i_2, :]', X_buf_live[(i_2-M_FIR):i_2, :]
             X_filt = signal.lfilter(numer, denom, X_buf_live[(i_2-mi_params.M_FIR):i_2, :].T).T
@@ -205,8 +205,8 @@ def cursor_func():
             X_feat = FEAT_MULT_1 * X_pow_diff
             print 'X_feat (rest): ', X_feat
             X_feat_log[counter] = X_feat
-            X_buf_feat_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :]\
-                            = X_feat * np.ones((mi_params.LEN_DATA_CHUNK, 1))
+            X_buf_feat_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :]\
+                            = X_feat * np.ones((mi_params.LEN_DATA_CHUNK_READ, 1))
             if counter > mi_params.IMP_RESP_LEN:
                 cursor_pos = cursor_pos_prev + np.array([X_feat, 0])
                 print 'cursor_pos: ', cursor_pos
@@ -220,7 +220,7 @@ def cursor_func():
             cursor.setOutline(graphics.color_rgb(mi_params.CURSOR_COLOR_REST[0], mi_params.CURSOR_COLOR_REST[1], mi_params.CURSOR_COLOR_REST[2]))
             cursor.draw(win)
 
-            #time.sleep(1.0 / (FREQ_S/LEN_DATA_CHUNK)) no
+            #time.sleep(1.0 / (FREQ_S/LEN_DATA_CHUNK_READ)) no
             #win.getMouse()
             counter += 1
 
@@ -229,7 +229,7 @@ def cursor_func():
 
 
     # Get the average rest state offset
-    X_feat_rest_offset = np.mean(X_feat_log[(counter-(mi_params.FREQ_S*5.0/mi_params.LEN_DATA_CHUNK)):counter])
+    X_feat_rest_offset = np.mean(X_feat_log[(counter-(mi_params.FREQ_S*5.0/mi_params.LEN_DATA_CHUNK_READ)):counter])
     print 'X_feat_log[0:counter]: ', X_feat_log[0:counter]
     print 'X_feat_rest_offset: ', X_feat_rest_offset
 
@@ -237,7 +237,7 @@ def cursor_func():
     # Cursor control loop
     #counter = 0 go on
     #while True:
-    while counter < (mi_params.LEN_REC_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK):
+    while counter < (mi_params.LEN_REC_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ):
         print 'counter: ', counter
 
         # Clear the canvas
@@ -245,19 +245,19 @@ def cursor_func():
 
         if not is_simulation_mode:
             # Wait for new data and get it
-            data_last_chunk = recorder.get_new_data(mi_params.LEN_DATA_CHUNK, 0.01)
+            data_last_chunk = recorder.get_new_data(mi_params.LEN_DATA_CHUNK_READ, mi_params.AMP_WAIT_SEC)
             recorder.acknowledge_new_data()
             print 'recorder.new_data_counter:', recorder.new_data_counter
         else:
-            time.sleep(1.0 / (mi_params.FREQ_S/mi_params.LEN_DATA_CHUNK))
-            data_last_chunk = 1000.0 * np.random.rand(mi_params.LEN_DATA_CHUNK, mi_params.NUM_CHANNELS)
+            time.sleep(1.0 / (mi_params.FREQ_S/mi_params.LEN_DATA_CHUNK_READ))
+            data_last_chunk = 1000.0 * np.random.rand(mi_params.LEN_DATA_CHUNK_READ, mi_params.NUM_CHANNELS)
             #print 'Random data_last_chunk size:', data_last_chunk
 
         if True:
             # Insert the new sample to our time series
-            X_buf_raw_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :] = data_last_chunk
+            X_buf_raw_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :] = data_last_chunk
             #print 'data_last_chunk:', data_last_chunk
-            #data_last_chunk = np.random.rand(LEN_DATA_CHUNK, NUM_CHANNELS)
+            #data_last_chunk = np.random.rand(LEN_DATA_CHUNK_READ, NUM_CHANNELS)
             #print 'data_last_chunk.shape:', data_last_chunk.shape
             #print '(data_last_chunk[:, 7]-data_last_chunk[:, 3]).shape:', (data_last_chunk[:, 7]-data_last_chunk[:, 3]).shape
             #data_last_reref = data_last_chunk[:, (7, 10)]
@@ -265,14 +265,14 @@ def cursor_func():
             data_last_reref = np.array([ (data_last_chunk[:, 7]-data_last_chunk[:, 4]), (data_last_chunk[:, 10]-data_last_chunk[:, 4])]).T  # Re-reference
             #print 'data_last_reref.shape:', data_last_reref.shape
             #print 'data_last_reref:', data_last_reref
-            X_buf_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :]\
+            X_buf_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :]\
                             = data_last_reref   # TODO which channel ids
-            #print 'X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK), :]:', X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK), :]
-            X_events_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :]\
-                            = cursor_event_list[counter % int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)]
+            #print 'X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK_READ):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK_READ), :]:', X_buf_live[((counter+LEN_PADDING)*LEN_DATA_CHUNK_READ):((counter+LEN_PADDING+1)*LEN_DATA_CHUNK_READ), :]
+            X_events_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :]\
+                            = cursor_event_list[counter % int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)]
 
             # Process the data
-            i_2 = (counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK
+            i_2 = (counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ
             #print 'numer, denom:', numer, denom
             #print 'X_buf_live[(i_2-M_FIR):i_2, :]', X_buf_live[(i_2-M_FIR):i_2, :]
             X_filt = signal.lfilter(numer, denom, X_buf_live[(i_2-mi_params.M_FIR):i_2, :].T).T
@@ -295,8 +295,8 @@ def cursor_func():
             X_feat = FEAT_MULT_2 * X_feat_pre
             print 'X_feat: ', X_feat
             X_feat_log[counter] = X_feat
-            X_buf_feat_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK), :]\
-                            = X_feat * np.ones((mi_params.LEN_DATA_CHUNK, 1))
+            X_buf_feat_live[((counter+mi_params.LEN_PADDING)*mi_params.LEN_DATA_CHUNK_READ):((counter+mi_params.LEN_PADDING+1)*mi_params.LEN_DATA_CHUNK_READ), :]\
+                            = X_feat * np.ones((mi_params.LEN_DATA_CHUNK_READ, 1))
             if counter > mi_params.IMP_RESP_LEN:
                 cursor_pos = cursor_pos_prev + np.array([X_feat, 0])
                 print 'cursor_pos: ', cursor_pos
@@ -304,14 +304,14 @@ def cursor_func():
             cursor_pos_point = graphics.Point(cursor_pos[0], cursor_pos[1])
             cursor_pos_prev = cursor_pos
             cursor = graphics.Circle(cursor_pos_point, cursor_radius)
-            #cursor.setFill(cursor_color_list[counter % int(LEN_PERIOD_SEC * FREQ_S / LEN_DATA_CHUNK)])
-            #cursor.setOutline(cursor_color_list[counter % int(LEN_PERIOD_SEC * FREQ_S / LEN_DATA_CHUNK)])
-            color_temp = cursor_color_arr_final[counter % int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK)]
+            #cursor.setFill(cursor_color_list[counter % int(LEN_PERIOD_SEC * FREQ_S / LEN_DATA_CHUNK_READ)])
+            #cursor.setOutline(cursor_color_list[counter % int(LEN_PERIOD_SEC * FREQ_S / LEN_DATA_CHUNK_READ)])
+            color_temp = cursor_color_arr_final[counter % int(mi_params.LEN_PERIOD_SEC * mi_params.FREQ_S / mi_params.LEN_DATA_CHUNK_READ)]
             cursor.setFill(graphics.color_rgb(color_temp[0], color_temp[1], color_temp[2]))
             cursor.setOutline(graphics.color_rgb(color_temp[0], color_temp[1], color_temp[2]))
             cursor.draw(win)
 
-            #time.sleep(1.0 / (FREQ_S/LEN_DATA_CHUNK)) no
+            #time.sleep(1.0 / (FREQ_S/LEN_DATA_CHUNK_READ)) no
             #win.getMouse()
             counter += 1
 
